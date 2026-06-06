@@ -1,0 +1,90 @@
+{
+  "experiment_name": "bodyweight_17_full",
+  "seed": 42,
+  "paths": {
+    "dataset_dir": "dataset/fitness_pose",
+    "source_workbook": "dataset/fitness_pose/Document/source_data_list_and_scenario/source_data_list_and_scenario.xlsx",
+    "naming_workbook": "dataset/fitness_pose/Document/fitness_pose_naming_rules/fitness_pose_naming_rules.xlsx",
+    "output_root": "outputs_fitness_pose"
+  },
+  "split": {
+    "val_groups": 3,
+    "test_groups": 3,
+    "attempts": 50000
+  },
+  "features": {
+    "workers": 8,
+    "cache_dir": "outputs_fitness_pose/_feature_cache"
+  },
+  "training": {
+    "epochs": 60,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "gradient_clip": 5.0,
+    "patience": 10
+  },
+  "models": {
+    "xgboost": {
+      "n_estimators": 500,
+      "max_depth": 6,
+      "learning_rate": 0.05,
+      "subsample": 0.9,
+      "colsample_bytree": 0.9,
+      "reg_lambda": 1.0,
+      "n_jobs": -1
+    },
+    "svm": {
+      "kernel": "rbf",
+      "C": 10.0,
+      "gamma": "scale",
+      "class_weight": "balanced",
+      "cache_size": 4096
+    },
+    "gnn": {
+      "hidden_dim": 128,
+      "num_layers": 3,
+      "dropout": 0.3
+    },
+    "transformer": {
+      "d_model": 128,
+      "num_heads": 4,
+      "num_layers": 3,
+      "dim_feedforward": 256,
+      "dropout": 0.1
+    }
+  },
+  "smoke": {
+    "samples_per_class_per_split": 8
+  },
+  "smoke_overrides": {
+    "training": {
+      "epochs": 2,
+      "batch_size": 64,
+      "patience": 2
+    },
+    "models": {
+      "xgboost": {
+        "n_estimators": 20,
+        "max_depth": 3,
+        "learning_rate": 0.1,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_lambda": 1.0,
+        "n_jobs": -1
+      },
+      "gnn": {
+        "hidden_dim": 64,
+        "num_layers": 2,
+        "dropout": 0.2
+      },
+      "transformer": {
+        "d_model": 64,
+        "num_heads": 4,
+        "num_layers": 2,
+        "dim_feedforward": 128,
+        "dropout": 0.1
+      }
+    }
+  }
+}
