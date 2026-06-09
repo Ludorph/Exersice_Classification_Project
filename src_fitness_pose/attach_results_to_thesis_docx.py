@@ -32,11 +32,11 @@ TABLES = [
 
 FIGURES = [
     ("그림 1. 최종 5-seed 모델 성능 비교", "figure_01_final_repeated_seed_model_comparison.png"),
-    ("그림 2. 자세 그룹별 모델 Macro-F1 비교", "figure_02_pose_group_macro_f1_by_model.png"),
-    ("그림 3. 같은 운동군 예측 비율 Heatmap", "figure_03_same_group_prediction_rate_heatmap.png"),
-    ("그림 4. SVM 대표 혼동행렬(seed 42)", "figure_04_representative_confusion_matrix_svm_seed42.png"),
-    ("그림 5. XGBoost 대표 혼동행렬(seed 42)", "figure_05_representative_confusion_matrix_xgboost_seed42.png"),
-    ("그림 6. 라벨별 F1-score 비교(seed 42)", "figure_06_representative_per_class_f1_seed42.png"),
+    ("그림 2. SVM 대표 혼동행렬(seed 42)", "figure_04_representative_confusion_matrix_svm_seed42.png"),
+    ("그림 3. XGBoost 대표 혼동행렬(seed 42)", "figure_05_representative_confusion_matrix_xgboost_seed42.png"),
+    ("그림 4. 라벨별 F1-score 비교(seed 42)", "figure_06_representative_per_class_f1_seed42.png"),
+    ("그림 5. 자세 그룹별 모델 Macro-F1 비교", "figure_02_pose_group_macro_f1_by_model.png"),
+    ("그림 6. 같은 운동군 예측 비율 Heatmap", "figure_03_same_group_prediction_rate_heatmap.png"),
 ]
 
 
@@ -162,17 +162,27 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
         blocks.append(paragraph(caption, bold=True))
         blocks.append(table_xml(read_csv_table(table_dir / filename)))
         blocks.append(paragraph())
+    blocks.append(paragraph("표 1부터 표 3까지는 빈 frame을 가진 JSON 파일을 제외한 뒤 실제 모델 학습과 평가에 사용한 유효 샘플을 기준으로 정리한 결과이다. 전체 데이터는 17개 맨몸운동 라벨로 구성되며, 같은 촬영 세션의 샘플이 서로 다른 분할에 동시에 포함되지 않도록 Train, Validation, Test를 촬영 세션 단위로 나누었다. 이를 통해 동일 인물 또는 동일 촬영 환경의 영향이 학습과 평가에 중복 반영되는 문제를 줄이고자 하였다."))
+    blocks.append(paragraph())
 
     blocks.append(paragraph("3.3.2) 모델 구조 및 하이퍼파라미터", bold=True))
     blocks.append(paragraph(TABLES[3][0], bold=True))
     blocks.append(table_xml(read_csv_table(table_dir / TABLES[3][1])))
     blocks.append(paragraph())
+    blocks.append(paragraph("표 4는 최종 실험에 사용한 모델 구조와 주요 하이퍼파라미터를 나타낸다. SVM과 XGBoost는 관절 좌표로부터 생성한 정형 특징 벡터를 입력으로 사용하였고, GNN과 Transformer는 관절별 특징 행렬을 입력으로 사용하여 관절 간 구조적 관계를 학습하도록 구성하였다. 하이퍼파라미터는 Validation set 성능을 기준으로 소규모 탐색을 수행한 뒤 최종 반복 실험에 적용하였다."))
+    blocks.append(paragraph())
 
     blocks.append(paragraph("3.3.3) 최종 성능 비교", bold=True))
-    for caption, filename in TABLES[4:6]:
-        blocks.append(paragraph(caption, bold=True))
-        blocks.append(table_xml(read_csv_table(table_dir / filename)))
-        blocks.append(paragraph())
+    blocks.append(paragraph(TABLES[4][0], bold=True))
+    blocks.append(table_xml(read_csv_table(table_dir / TABLES[4][1])))
+    blocks.append(paragraph())
+    blocks.append(paragraph("표 5의 최종 5-seed 반복 실험 결과에서 SVM은 Macro-F1 0.9044로 가장 높은 평균 성능을 보였고, XGBoost는 Macro-F1 0.9006으로 SVM과 매우 근접한 성능을 보였다. Transformer와 GNN은 각각 0.8770, 0.8462의 Macro-F1을 기록하여 전통적 머신러닝 모델보다 낮은 성능을 보였다. 이는 본 실험에서 사용한 관절 좌표 통계 특징과 데이터 규모에서는 SVM과 XGBoost가 비교적 안정적으로 동작했음을 의미한다."))
+    blocks.append(paragraph())
+    blocks.append(paragraph(TABLES[5][0], bold=True))
+    blocks.append(table_xml(read_csv_table(table_dir / TABLES[5][1])))
+    blocks.append(paragraph())
+    blocks.append(paragraph("표 6은 하이퍼파라미터 튜닝 전후의 Macro-F1 변화를 비교한 것이다. XGBoost와 GNN은 튜닝 이후 소폭 향상되었고, SVM은 기존 설정과 동일한 수준을 유지하였다. Transformer는 Validation 기준 탐색에서는 개선 가능성이 있었으나 최종 5-seed Test 평균에서는 오히려 낮아졌다. 이는 Validation set에서 좋은 설정이 항상 Test set 반복 평균에서도 더 좋은 결과로 이어지지는 않음을 보여준다."))
+    blocks.append(paragraph())
     blocks.append(paragraph(FIGURES[0][0], bold=True, center=True))
     blocks.append(image_xml(figure_rel_ids[FIGURES[0][1]], figure_dir / FIGURES[0][1], 1))
     blocks.append(paragraph())
@@ -181,7 +191,9 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
     blocks.append(paragraph(TABLES[6][0], bold=True))
     blocks.append(table_xml(read_csv_table(table_dir / TABLES[6][1])))
     blocks.append(paragraph())
-    for doc_id, (caption, filename) in enumerate(FIGURES[3:6], start=4):
+    blocks.append(paragraph("표 7의 주요 오분류 조합을 보면, 대부분의 오류는 운동 형태가 비슷한 라벨 사이에서 반복적으로 발생하였다. 특히 스텝 백워드 다이나믹 런지와 스텝 포워드 다이나믹 런지, 니푸쉬업과 푸시업, 바이시클 크런치와 크런치처럼 같은 자세군 또는 같은 운동 계열에 속하는 조합에서 혼동이 두드러졌다. 이는 관절 위치 정보만으로도 전체 운동 분류는 가능하지만, 방향 차이나 지지 방식처럼 세밀한 차이를 구분하는 데에는 추가 특징이 필요할 수 있음을 시사한다."))
+    blocks.append(paragraph())
+    for doc_id, (caption, filename) in enumerate(FIGURES[1:4], start=2):
         blocks.append(paragraph(caption, bold=True, center=True))
         blocks.append(image_xml(figure_rel_ids[filename], figure_dir / filename, doc_id))
         blocks.append(paragraph())
@@ -191,12 +203,14 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
         blocks.append(paragraph(caption, bold=True))
         blocks.append(table_xml(read_csv_table(table_dir / filename)))
         blocks.append(paragraph())
-    for doc_id, (caption, filename) in enumerate(FIGURES[1:3], start=2):
+    blocks.append(paragraph("표 8과 표 9는 운동 라벨을 자세 특성에 따라 묶어 모델 성능을 비교한 결과이다. 버피 테스트와 같이 전신 움직임이 뚜렷한 전신 복합 운동이나 굿모닝과 같은 고관절 힌지 운동은 비교적 높은 성능을 보였다. 반면 누운 자세 코어 운동, 상지 지지/엎드린 자세 운동처럼 관절 배치가 서로 유사한 그룹에서는 성능이 상대적으로 낮아졌다. 이러한 결과는 오분류가 단순한 모델 오류라기보다 운동 동작 자체의 구조적 유사성과 관련되어 있음을 보여준다."))
+    blocks.append(paragraph())
+    for doc_id, (caption, filename) in enumerate(FIGURES[4:6], start=5):
         blocks.append(paragraph(caption, bold=True, center=True))
         blocks.append(image_xml(figure_rel_ids[filename], figure_dir / filename, doc_id))
         blocks.append(paragraph())
 
-    blocks.append(paragraph("이상의 표와 그림을 통해 전체 성능, 모델별 설정, 오분류 패턴, 자세 그룹별 차이를 함께 확인할 수 있다."))
+    blocks.append(paragraph("이상의 표와 그림을 통해 SVM과 XGBoost가 본 실험 조건에서 가장 안정적인 성능을 보였으며, 주요 오분류는 유사한 자세 또는 같은 운동 계열 내부에서 집중적으로 발생함을 확인할 수 있다."))
     return "".join(blocks)
 
 
@@ -255,6 +269,10 @@ def ensure_drawing_namespaces(document_xml: str) -> str:
         raise ValueError("Could not find w:document root element.")
     root_open = document_xml[start:end]
     additions = []
+    if "xmlns:r=" not in root_open:
+        additions.append('xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"')
+    if "xmlns:wp=" not in root_open:
+        additions.append('xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"')
     if "xmlns:a=" not in root_open:
         additions.append('xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"')
     if "xmlns:pic=" not in root_open:

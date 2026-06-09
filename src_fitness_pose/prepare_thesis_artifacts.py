@@ -94,19 +94,32 @@ def main() -> None:
     error_dir = Path("outputs_fitness_pose") / "bodyweight_17_tuned_all_error_analysis"
     pose_group_dir = Path("outputs_fitness_pose") / "bodyweight_17_tuned_all_pose_group_analysis"
 
-    dataset_summary = pd.read_csv(final_seed_data / "dataset_summary.csv")
+    experiment_metadata = pd.read_csv(final_seed_data / "experiment_metadata.csv")
+    dataset_summary = (
+        experiment_metadata.groupby(["exercise_label", "pose"], as_index=False)
+        .agg(samples=("sample_id", "size"), sessions=("session_id", "nunique"))
+        .sort_values("exercise_label")
+    )
     write_table(dataset_summary, table_dir / "table_01_dataset_label_summary")
 
-    split_distribution = pd.read_csv(final_seed_data / "split_label_distribution.csv")
-    split_overall = split_distribution.groupby("split", as_index=False).agg(samples=("samples", "sum"), sessions=("sessions", "sum"))
+    split_overall = (
+        experiment_metadata.groupby("split", as_index=False)
+        .agg(samples=("sample_id", "size"), sessions=("session_id", "nunique"))
+    )
     split_order = {"train": 0, "validation": 1, "test": 2}
     split_overall = split_overall.assign(_order=split_overall["split"].map(split_order)).sort_values("_order").drop(columns="_order")
     write_table(split_overall, table_dir / "table_02_split_overall")
 
+    split_distribution = (
+        experiment_metadata.groupby(["exercise_label", "split"], as_index=False)
+        .agg(samples=("sample_id", "size"))
+    )
     split_pivot = split_distribution.pivot(index="exercise_label", columns="split", values="samples").reset_index().fillna(0)
     for column in ("train", "validation", "test"):
         if column in split_pivot:
             split_pivot[column] = split_pivot[column].astype(int)
+    ordered_columns = ["exercise_label", "train", "validation", "test"]
+    split_pivot = split_pivot[[column for column in ordered_columns if column in split_pivot]]
     split_pivot["total"] = split_pivot[[column for column in ("train", "validation", "test") if column in split_pivot]].sum(axis=1)
     write_table(split_pivot, table_dir / "table_03_split_by_label")
 

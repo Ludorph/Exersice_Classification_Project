@@ -74,3 +74,19 @@ outputs_fitness_pose/bodyweight_17_full/
 
 `experiment_config_actual.json`과 `model_hyperparameters.csv`는 논문에 기재할
 모델 변수, 모델 구조, 하이퍼파라미터 및 실험 조건을 기록한다.
+
+## 논문 문서 산출물
+
+2026-06-09 기준으로 기존 3개 운동 실험 중심 문서를 AI-Hub 맨몸운동 17개
+라벨 실험 기준으로 재작성하였다. 본문에는 연구 배경, 연구 목적, 연구 범위,
+연구 방법론, 활용 데이터, 모델 구조와 평가 기준을 새 데이터셋 및 새 모델
+구성에 맞게 반영하였다.
+
+- 본문수정본: `공학논문연구_실험결과_AIHub_본문수정본.docx`
+- 표그림첨부 검수수정본: `공학논문연구_실험결과_AIHub_표그림첨부본_검수수정본.docx`
+- 검수용 추출 텍스트: `outputs_fitness_pose/thesis_docx_review_text_after_fix.txt`
+
+검수수정본에는 논문용 표 9개와 그림 6개를 첨부하였다. 표 1~3은 빈 frame을
+가진 JSON을 제외한 실제 유효 샘플 16,408개 기준으로 재생성했으며,
+Train/Validation/Test 분할은 촬영 세션 단위로 정리하였다. 문서 내부 XML과
+그림 네임스페이스를 확인하여 Word에서 열릴 수 있는 docx 구조로 검수하였다.

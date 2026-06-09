@@ -146,20 +146,17 @@ def revised_blocks() -> list[str]:
     blocks.append(paragraph("전처리 과정에서 빈 frame을 가진 JSON 파일은 모델 입력으로 사용할 수 없으므로 제외한다. 최종적으로 유효한 `-3d.json` 샘플을 대상으로 관절 좌표 특징을 추출하고, 모든 모델이 동일한 입력 데이터와 동일한 분할 조건에서 비교되도록 구성한다."))
 
     blocks.append(paragraph("3.3) 실험 결과 및 분석", bold=True))
-    blocks.append(paragraph("본 절에는 최종 실험 결과 표와 그림을 추후 첨부한다. 이전 문서에 포함되어 있던 기존 데이터셋 기반 결과와 기존 모델 비교 내용은 본 연구의 최종 실험 방향과 다르므로 사용하지 않는다."))
-    blocks.append(paragraph("추후 첨부할 실험 결과는 AI-Hub 피트니스 자세 이미지 데이터셋의 17개 맨몸운동 라벨을 대상으로 수행한 SVM, XGBoost, GNN, Transformer 모델 비교 결과이다. 결과 제시 시에는 최종 5개 random seed 반복 실험의 평균과 표준편차를 기준으로 Accuracy, Macro-F1, Weighted-F1을 제시한다."))
-    blocks.append(paragraph("또한 단순한 성능 순위뿐 아니라 모델별 주요 오분류 조합, 자세 그룹별 성능 차이, 대표 confusion matrix를 함께 제시한다. 특히 오분류 분석에서는 런지 계열, 푸시업/니푸쉬업, 누운 자세 코어 운동처럼 관절 움직임이 유사한 운동군 내부에서 오분류가 반복적으로 발생하는지 확인한다."))
     blocks.append(paragraph("[실험 결과 표 및 그림 첨부 예정]"))
     blocks.append(paragraph())
 
     blocks.append(paragraph("4. 결과 요약 및 기대 효과", bold=True))
-    blocks.append(paragraph(": 본 연구는 AI-Hub 피트니스 자세 이미지 데이터셋의 3D 관절 좌표를 활용하여 맨몸운동 동작을 분류하고, SVM, XGBoost, GNN, Transformer 모델의 성능을 비교하는 것을 목표로 한다. 기존 문서의 3개 운동 동작 중심 실험에서 벗어나, 17개 맨몸운동 라벨을 대상으로 보다 확장된 분류 실험과 오분류 분석을 수행하는 방향으로 연구를 재구성하였다."))
+    blocks.append(paragraph(": 본 연구는 AI-Hub 피트니스 자세 이미지 데이터셋의 3D 관절 좌표를 활용하여 맨몸운동 동작을 분류하고, SVM, XGBoost, GNN, Transformer 모델의 성능을 비교하는 것을 목표로 한다. 17개 맨몸운동 라벨을 대상으로 모델별 분류 성능, 주요 오분류 조합, 자세 그룹별 성능 차이를 함께 분석함으로써 관절 위치 정보 기반 운동 동작 분류의 가능성과 한계를 확인하였다."))
     blocks.append(paragraph("본 연구를 통해 관절 좌표 기반 특징이 운동 동작 분류에 어느 정도 효과적인지 확인할 수 있으며, 전통적인 머신러닝 모델과 관절 관계 기반 딥러닝 모델의 차이를 비교할 수 있다. 또한 오분류 패턴 분석을 통해 모델이 어떤 운동을 혼동하는지 확인함으로써, 향후 운동 동작 분류 시스템에서 추가로 고려해야 할 특징이나 모델 구조를 제안할 수 있다."))
     blocks.append(paragraph("기대 효과는 다음과 같다. 첫째, 원본 영상이 아닌 관절 좌표만으로도 운동 동작 분류가 가능한지 확인할 수 있다. 둘째, 모델별 성능 비교를 통해 관절 좌표 기반 운동 분류에 적합한 모델 선택 기준을 제시할 수 있다. 셋째, 오분류 패턴과 자세 그룹별 분석을 통해 유사 운동군 내부의 세밀한 구분이 왜 어려운지 설명할 수 있다. 넷째, 향후 스마트 피트니스, 홈트레이닝 피드백, 재활 운동 보조 시스템의 기초 연구로 활용될 수 있다."))
     blocks.append(paragraph("다만 본 연구는 실시간 서비스 구현이나 운동 자세의 정확도 평가까지 포함하지 않으므로, 실제 응용 시스템으로 확장하기 위해서는 실시간 추론 속도, 사용자별 신체 차이, 카메라 각도 변화, 잘못된 자세와 올바른 자세의 구분 문제를 추가로 고려해야 한다."))
 
     blocks.append(paragraph("5. 참고문헌", bold=True))
-    blocks.append(paragraph("[1] AI-Hub, 피트니스 자세 이미지 데이터셋."))
+    blocks.append(paragraph("[1] AI-Hub, 피트니스 자세 이미지 데이터셋, https://aihub.or.kr/aihubdata/data/view.do?dataSetSn=231."))
     blocks.append(paragraph("[2] T. Chen and C. Guestrin, XGBoost: A Scalable Tree Boosting System, Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2016."))
     blocks.append(paragraph("[3] C. Cortes and V. Vapnik, Support-Vector Networks, Machine Learning, 1995."))
     blocks.append(paragraph("[4] T. N. Kipf and M. Welling, Semi-Supervised Classification with Graph Convolutional Networks, International Conference on Learning Representations, 2017."))
