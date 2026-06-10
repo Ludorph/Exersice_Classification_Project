@@ -28,6 +28,7 @@ TABLES = [
     ("표 7. 모델 공통 주요 오분류 조합", "table_07_common_misclassification_patterns.csv"),
     ("표 8. 자세 그룹별 최고 모델", "table_08_pose_group_best_models.csv"),
     ("표 9. 자세 그룹별 모델 Macro-F1 상세", "table_09_pose_group_macro_f1_by_model.csv"),
+    ("표 10. 버피 테스트 1.0000 지표 검증", "table_10_burpee_metric_validation.csv"),
 ]
 
 
@@ -222,7 +223,8 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
         blocks.append(paragraph(caption, bold=True))
         blocks.append(table_xml(read_csv_table(table_dir / filename)))
         blocks.append(paragraph())
-    blocks.append(paragraph("표 8과 표 9는 운동 라벨을 자세 특성에 따라 묶어 모델 성능을 비교한 결과이다. 버피 테스트와 같이 전신 움직임이 뚜렷한 전신 복합 운동이나 굿모닝과 같은 고관절 힌지 운동은 비교적 높은 성능을 보였다. 반면 누운 자세 코어 운동, 상지 지지/엎드린 자세 운동처럼 관절 배치가 서로 유사한 그룹에서는 성능이 상대적으로 낮아졌다. 이러한 결과는 오분류가 단순한 모델 오류라기보다 운동 동작 자체의 구조적 유사성과 관련되어 있음을 보여준다."))
+    blocks.append(paragraph("표 8과 표 9는 운동 라벨을 자세 특성에 따라 묶어 모델 성능을 비교한 결과이다. 버피 테스트처럼 전신 움직임이 뚜렷한 라벨이나 굿모닝과 같은 고관절 힌지 운동은 비교적 높은 성능을 보였다. 반면 누운 자세 코어 운동, 상지 지지/엎드린 자세 운동처럼 관절 배치가 서로 유사한 그룹에서는 성능이 상대적으로 낮아졌다. 이러한 결과는 오분류가 단순한 모델 오류라기보다 운동 동작 자체의 구조적 유사성과 관련되어 있음을 보여준다."))
+    blocks.append(paragraph("표 10은 버피 테스트 지표가 1.0000으로 나타난 이유를 추가 검증한 결과이다. 버피 테스트 그룹은 하나의 실제 라벨만 포함하는 단일 라벨 그룹이며, test split의 버피 테스트 288개 샘플을 5개 seed에서 반복 평가한 결과가 support 1440으로 집계되었다. SVM, GNN, Transformer는 해당 반복 평가에서 버피 테스트 샘플을 모두 맞혔고, XGBoost는 같은 샘플 1개를 4개 seed에서 바이시클 크런치로 오분류하였다. 또한 sample_id, session_id, 완전 동일 feature vector 기준의 직접적인 train/test 중복은 확인되지 않았다. 다만 동일 serial 운동 변형이 train, validation, test에 모두 존재하므로, 이 결과는 세션 분리 조건에서의 높은 성능으로 해석해야 하며 완전히 새로운 운동 변형에 대한 일반화 성능으로 단정하기에는 한계가 있다."))
     blocks.append(paragraph())
     for doc_id, (caption, filename) in enumerate(RESULT_FIGURES[4:6], start=7):
         blocks.append(paragraph(caption, bold=True, center=True))

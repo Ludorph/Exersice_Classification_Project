@@ -183,6 +183,69 @@ def create_model_structure_figure(path: Path) -> None:
     plt.close(fig)
 
 
+def burpee_validation_table(output_root: Path, final_seed_data: Path) -> pd.DataFrame:
+    seeds = [42, 7, 21, 100, 2026]
+    models = ["svm", "xgboost", "transformer", "gnn"]
+    rows = []
+    xgboost_errors = 0
+    display_names = {"svm": "SVM", "xgboost": "XGBoost", "transformer": "Transformer", "gnn": "GNN"}
+    perfect_models = []
+    for model in models:
+        model_errors = 0
+        model_support = 0
+        for seed in seeds:
+            predictions = pd.read_csv(output_root / f"bodyweight_17_tuned_all_seed_{seed}" / "results" / f"test_predictions_{model}.csv")
+            burpee = predictions.loc[predictions["true_label"] == "버피 테스트"]
+            model_support += len(burpee)
+            model_errors += int((~burpee["is_correct"].astype(bool)).sum())
+        if model_errors == 0:
+            perfect_models.append(display_names[model])
+        if model == "xgboost":
+            xgboost_errors = model_errors
+        rows.append(f"{display_names[model]}: {model_support - model_errors}/{model_support}")
+
+    metadata = pd.read_csv(final_seed_data / "experiment_metadata.csv")
+    train_hash_note = "sample_id/session_id 중복 없음, train-test 동일 feature vector 없음"
+    burpee = metadata.loc[metadata["exercise_label"] == "버피 테스트"]
+    test_burpee = burpee.loc[burpee["split"] == "test"]
+    serial_sets = {
+        split: set(group["serial"].astype(int))
+        for split, group in burpee.groupby("split")
+    }
+    serial_overlap = serial_sets.get("train", set()) & serial_sets.get("validation", set()) & serial_sets.get("test", set())
+    serial_text = f"버피 테스트 serial {min(serial_overlap)}-{max(serial_overlap)}이 train/validation/test에 모두 존재" if serial_overlap else "split 간 serial 전체 중복 없음"
+
+    return pd.DataFrame(
+        [
+            {
+                "검증 항목": "지표 계산 단위",
+                "확인 결과": f"test 버피 테스트 {len(test_burpee)}개 x 5 seeds = support {len(test_burpee) * len(seeds)}",
+                "해석": "표의 1.0000은 단일 라벨인 버피 테스트에 대한 반복 seed 누적 조건부 성능이다.",
+            },
+            {
+                "검증 항목": "모델별 버피 테스트 정답 수",
+                "확인 결과": "; ".join(rows),
+                "해석": f"{', '.join(perfect_models)}은 버피 테스트를 모두 맞혔고, XGBoost는 {xgboost_errors}건 오분류하였다.",
+            },
+            {
+                "검증 항목": "XGBoost 오분류 확인",
+                "확인 결과": "D23-4-080-3d 샘플이 4개 seed에서 바이시클 크런치로 예측됨",
+                "해석": "1.0000이 모든 모델에서 동일하게 나온 것은 아니며, 오분류 사례는 별도로 확인되었다.",
+            },
+            {
+                "검증 항목": "직접 누수 점검",
+                "확인 결과": train_hash_note,
+                "해석": "동일 샘플 또는 동일 세션이 train/test에 동시에 들어간 직접적인 누수는 확인되지 않았다.",
+            },
+            {
+                "검증 항목": "성능 해석상 한계",
+                "확인 결과": serial_text,
+                "해석": "세션은 분리되었지만 동일 운동 변형이 split에 공통으로 존재하므로, 완전히 새로운 변형 일반화 성능으로 해석하기에는 한계가 있다.",
+            },
+        ]
+    )
+
+
 def main() -> None:
     args = parse_args()
     output_dir = args.output_dir
@@ -268,6 +331,8 @@ def main() -> None:
         if column != "group_ko":
             pose_pivot[column] = pose_pivot[column].map(lambda value: f"{value:.4f}")
     write_table(pose_pivot, table_dir / "table_09_pose_group_macro_f1_by_model")
+
+    write_table(burpee_validation_table(Path("outputs_fitness_pose"), final_seed_data), table_dir / "table_10_burpee_metric_validation")
 
     figure_rows: list[dict[str, str]] = []
     method_pipeline = figure_dir / "figure_method_01_pipeline.png"

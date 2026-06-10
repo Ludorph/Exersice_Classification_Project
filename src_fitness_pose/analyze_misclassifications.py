@@ -33,7 +33,7 @@ LABEL_GROUPS = {
 
 GROUP_NAMES_KO = {
     "standing_core": "서서 수행하는 코어 운동",
-    "whole_body": "전신 복합 운동",
+    "whole_body": "버피 테스트",
     "lunge": "런지 계열 운동",
     "hinge": "고관절 힌지 운동",
     "lying_core": "누운 자세 코어 운동",
