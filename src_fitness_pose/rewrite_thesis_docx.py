@@ -118,28 +118,64 @@ def revised_blocks() -> list[str]:
     blocks.append(paragraph(": 본 연구에서는 AI-Hub 피트니스 자세 이미지 데이터셋의 3D 관절 좌표 JSON을 활용하여 SVM, XGBoost, GNN, Transformer 모델의 운동 동작 분류 성능을 비교한다. 전체 연구 절차는 다음과 같다."))
     blocks.extend(numbered([
         "AI-Hub 피트니스 자세 이미지 데이터셋의 폴더 구조와 라벨 명명 규칙을 분석한다.",
-        "맨몸운동 라벨에 해당하는 `-3d.json` 파일을 선별한다.",
-        "각 JSON 파일에서 24개 관절의 x, y, z 좌표를 추출한다.",
-        "관절 좌표를 신체 중심 기준으로 정규화하고, 관절별 통계 특징을 생성한다.",
+        "맨몸운동 라벨에 해당하는 `-3d.json` 파일을 읽는다.",
+        "각 `-3d.json` 파일의 frames 항목에서 24개 관절의 x, y, z 좌표를 추출한다.",
+        "프레임 전체를 기준으로 관절별 위치와 움직임의 통계 특징을 계산한다.",
+        "JSON 파일 하나를 하나의 운동 수행 샘플로 변환한다.",
+        "생성된 샘플을 SVM, XGBoost, GNN, Transformer 모델의 입력 형식에 맞게 구성한다.",
         "촬영 세션 단위로 Train, Validation, Test 데이터를 분할한다.",
-        "SVM, XGBoost, GNN, Transformer 모델을 학습한다.",
         "Validation set을 기준으로 소규모 하이퍼파라미터 튜닝을 수행한다.",
         "최종 설정으로 여러 random seed 반복 실험을 수행하여 결과의 안정성을 확인한다.",
         "성능 지표, 오분류 조합, 자세 그룹별 성능을 분석한다.",
     ]))
-    blocks.append(paragraph("관절 좌표 전처리에서는 사람의 위치와 신체 크기 차이가 모델 성능에 과도하게 영향을 주지 않도록 좌표 정규화를 수행한다. 이후 각 관절의 평균 위치, 표준편차, 최솟값, 최댓값, 움직임 범위, 시작-종료 변화량, 평균 이동량, 최대 이동량을 계산하여 모델 입력 특징으로 사용한다. 이 과정을 통해 각 운동 수행 샘플은 관절별 특징 행렬로 표현된다."))
-    blocks.append(paragraph("SVM과 XGBoost는 관절별 특징 행렬을 1차원 특징 벡터로 펼친 입력을 사용한다. GNN은 관절을 노드로 보고 인체 골격 연결 관계를 반영하여 학습한다. Transformer는 관절을 token처럼 보고 관절 간 관계를 attention 구조로 학습한다. 모든 모델은 동일한 데이터 분할에서 평가하여 모델 간 비교가 가능하도록 구성한다."))
+    blocks.append(paragraph("본 연구에서 프레임은 관절 좌표를 추출하기 위한 원천 단위이며, 모델 학습과 평가는 프레임 단위가 아니라 JSON 파일 단위의 운동 수행 샘플을 기준으로 수행한다. 즉, 하나의 `-3d.json` 파일 안에 포함된 여러 프레임의 관절 좌표를 독립 샘플로 분리하지 않고, 같은 수행 단위 안에서 요약하여 하나의 입력 샘플로 사용한다."))
+    blocks.append(paragraph("3.1.1) 입력 데이터 및 특징 구성", bold=True))
+    blocks.append(paragraph("i번째 운동 수행 샘플은 하나의 `-3d.json` 파일로 정의하며, 해당 파일에 포함된 프레임별 관절 좌표 집합을 다음과 같이 나타낸다."))
+    blocks.append(paragraph("(1) X_i = {p_{t,j} | t = 1,...,T_i, j = 1,...,J}"))
+    blocks.append(paragraph("(2) p_{t,j} = (x_{t,j}, y_{t,j}, z_{t,j})"))
+    blocks.append(paragraph("여기서 T_i는 i번째 샘플의 전체 프레임 수, J는 관절 수를 의미한다. 본 연구에서는 24개 관절의 3차원 좌표를 사용하며, 각 프레임의 관절 좌표는 신체 중심과 크기 차이를 줄이기 위해 정규화한 뒤 특징 추출에 사용한다."))
+    blocks.append(paragraph("관절 j에 대한 프레임별 좌표열을 기준으로 평균 위치, 표준편차, 최솟값, 최댓값, 움직임 범위, 시작-종료 변화량, 평균 이동량, 최대 이동량을 계산한다. 대표적인 특징 수식은 다음과 같다."))
+    blocks.append(paragraph("(3) mean_j = (1 / T_i) sum_{t=1}^{T_i} p_{t,j}"))
+    blocks.append(paragraph("(4) std_j = sqrt((1 / T_i) sum_{t=1}^{T_i} ||p_{t,j} - mean_j||^2)"))
+    blocks.append(paragraph("(5) range_j = max_t(p_{t,j}) - min_t(p_{t,j})"))
+    blocks.append(paragraph("(6) delta_j = p_{T_i,j} - p_{1,j}"))
+    blocks.append(paragraph("(7) move_j = (1 / (T_i - 1)) sum_{t=2}^{T_i} ||p_{t,j} - p_{t-1,j}||"))
+    blocks.append(paragraph("이 과정을 통해 각 운동 수행 샘플은 관절별 특징 행렬로 표현된다. SVM과 XGBoost에는 관절별 특징 행렬을 1차원 특징 벡터로 펼친 입력을 사용하고, GNN과 Transformer에는 관절을 개별 노드 또는 token으로 유지한 관절별 특징 행렬을 입력으로 사용한다."))
+    blocks.append(paragraph("[방법론 그림 첨부 예정]"))
 
-    blocks.append(paragraph("분석에 사용되는 모델은 다음과 같다.", bold=True))
-    blocks.append(paragraph("SVM: 관절 좌표로부터 생성한 통계 특징 벡터를 입력으로 사용하는 전통적 머신러닝 분류 모델이다. 본 연구에서는 비선형 분류를 위해 RBF kernel을 사용하며, 클래스 불균형의 영향을 줄이기 위해 class weight를 적용한다. SVM은 비교적 작은 차원의 정형 특징 데이터에서 안정적인 성능을 보이는 기준 모델로 사용된다."))
-    blocks.append(paragraph("XGBoost: gradient boosted decision tree 기반 앙상블 모델로, 정형화된 특징 데이터 분류에서 높은 성능을 보이는 대표 모델이다. 본 연구에서는 관절 좌표 기반 통계 특징을 입력으로 사용하며, 트리 깊이, 학습률, 추정기 수, 샘플링 비율 등을 조정하여 성능을 비교한다."))
-    blocks.append(paragraph("GNN: 관절을 그래프의 노드로 보고, 인체 골격의 연결 관계를 엣지로 반영하는 모델이다. 관절 간 구조적 관계를 학습할 수 있다는 장점이 있으며, 본 연구에서는 24개 관절의 특징을 노드 입력으로 사용한다."))
-    blocks.append(paragraph("Transformer: 각 관절을 token처럼 보고, 관절 간 관계를 self-attention 구조로 학습하는 모델이다. Transformer는 특정 관절 사이의 상호작용을 동적으로 반영할 수 있으므로, 운동 동작 분류에서 관절 간 관계를 포착하는 비교 모델로 사용된다."))
-    blocks.append(paragraph("모델 성능 평가는 Accuracy, Precision, Recall, Macro-F1, Weighted-F1을 중심으로 수행한다. 특히 본 연구에서는 라벨별 데이터 수 차이를 고려하여 Macro-F1을 주요 비교 지표로 사용한다. 또한 confusion matrix와 오분류 조합 분석을 통해 어떤 운동 동작 사이에서 혼동이 발생하는지 확인한다."))
+    blocks.append(paragraph("3.1.2) 모델별 구조 및 수식", bold=True))
+    blocks.append(paragraph("분석에 사용되는 모델은 SVM, XGBoost, GNN, Transformer이며, 네 모델은 동일한 학습/검증/평가 분할에서 비교한다. SVM과 XGBoost는 정형 특징 벡터 기반 모델이고, GNN과 Transformer는 관절별 특징 행렬에서 관절 간 관계를 학습하는 모델이다."))
+    blocks.append(paragraph("SVM은 관절 좌표로부터 생성한 특징 벡터를 입력으로 사용하는 전통적 머신러닝 분류 모델이다. 본 연구에서는 비선형 분류를 위해 RBF kernel을 사용하며, kernel 함수는 다음과 같다."))
+    blocks.append(paragraph("(8) K(x_i, x_j) = exp(-gamma ||x_i - x_j||^2)"))
+    blocks.append(paragraph("다중 클래스 분류에서는 각 클래스에 대한 결정 함수 값을 계산하고, 가장 큰 결정 함수 값을 갖는 클래스를 최종 예측 라벨로 선택한다. 클래스 불균형의 영향을 줄이기 위해 class_weight를 적용하였다."))
+    blocks.append(paragraph("XGBoost는 여러 개의 decision tree를 순차적으로 결합하는 gradient boosting 기반 앙상블 모델이다. K개의 트리로 구성된 모델의 예측값은 다음과 같이 표현할 수 있다."))
+    blocks.append(paragraph("(9) y_hat_i = sum_{k=1}^{K} f_k(x_i),  f_k in F"))
+    blocks.append(paragraph("XGBoost는 예측 손실과 모델 복잡도 정규화 항을 함께 최소화한다."))
+    blocks.append(paragraph("(10) Obj = sum_i l(y_i, y_hat_i) + sum_{k=1}^{K} Omega(f_k)"))
+    blocks.append(paragraph("GNN은 관절을 그래프의 노드로, 인체 골격의 연결 관계를 edge로 정의하여 관절 간 구조적 관계를 학습하는 모델이다. 인접행렬 A에 자기 연결 I를 더한 뒤 정규화한 행렬은 다음과 같다."))
+    blocks.append(paragraph("(11) A_hat = D^(-1/2)(A + I)D^(-1/2)"))
+    blocks.append(paragraph("그래프 합성곱 계층은 이전 계층의 관절 특징 H^(l)에 정규화 인접행렬과 가중치 행렬을 적용하여 다음 계층의 표현을 계산한다."))
+    blocks.append(paragraph("(12) H^(l+1) = sigma(A_hat H^(l) W^(l))"))
+    blocks.append(paragraph("Transformer는 각 관절을 token처럼 보고 self-attention을 적용하는 모델이다. 관절별 특징은 선형 변환과 관절 embedding을 거쳐 Transformer encoder에 입력되며, attention 연산은 다음과 같다."))
+    blocks.append(paragraph("(13) Attention(Q, K, V) = softmax(QK^T / sqrt(d_k))V"))
+    blocks.append(paragraph("이를 통해 Transformer는 특정 관절 사이의 상호작용을 동적으로 반영할 수 있으며, 최종적으로 관절 token 표현을 평균 pooling한 뒤 분류 계층을 통해 운동 라벨을 예측한다."))
+
+    blocks.append(paragraph("3.1.3) 학습 및 평가 지표", bold=True))
+    blocks.append(paragraph("GNN과 Transformer는 다중 클래스 분류 문제로 학습되며, 손실 함수로 Cross-Entropy Loss를 사용한다."))
+    blocks.append(paragraph("(14) L = - sum_{c=1}^{C} y_c log(p_c)"))
+    blocks.append(paragraph("모델 성능 평가는 Accuracy, Precision, Recall, F1-score, Macro-F1, Weighted-F1을 중심으로 수행한다. 주요 평가 지표는 다음과 같다."))
+    blocks.append(paragraph("(15) Accuracy = (TP + TN) / (TP + TN + FP + FN)"))
+    blocks.append(paragraph("(16) Precision = TP / (TP + FP)"))
+    blocks.append(paragraph("(17) Recall = TP / (TP + FN)"))
+    blocks.append(paragraph("(18) F1 = 2 * Precision * Recall / (Precision + Recall)"))
+    blocks.append(paragraph("(19) Macro-F1 = (1 / C) sum_{c=1}^{C} F1_c"))
+    blocks.append(paragraph("(20) Weighted-F1 = sum_{c=1}^{C} (n_c / N) F1_c"))
+    blocks.append(paragraph("여기서 C는 클래스 수, n_c는 클래스 c의 샘플 수, N은 전체 샘플 수를 의미한다. 본 연구에서는 라벨별 데이터 수 차이를 고려하여 Macro-F1을 주요 비교 지표로 사용하며, confusion matrix와 오분류 조합 분석을 통해 어떤 운동 동작 사이에서 혼동이 발생하는지 확인한다."))
 
     blocks.append(paragraph("3.2) 활용 데이터", bold=True))
     blocks.append(paragraph(": 본 연구에서는 AI-Hub 피트니스 자세 이미지 데이터셋을 활용한다. 해당 데이터셋은 다양한 피트니스 동작에 대한 이미지 및 라벨 정보를 포함하며, 본 연구에서는 이 중 운동 동작 분류에 사용할 수 있는 3D 관절 좌표 JSON 데이터를 대상으로 한다."))
-    blocks.append(paragraph("데이터셋 내 JSON 파일은 일반 JSON과 `-3d.json` 파일이 함께 존재할 수 있다. 본 연구에서는 동일한 운동 수행 샘플이 중복으로 사용되는 것을 방지하고, 3차원 관절 좌표 정보를 일관되게 활용하기 위해 `-3d.json` 파일만 사용한다. 각 `-3d.json` 파일은 하나의 운동 수행 샘플로 간주하며, 파일 내부의 여러 프레임에서 24개 관절의 x, y, z 좌표를 추출한다."))
+    blocks.append(paragraph("데이터셋 내 JSON 파일은 일반 JSON과 `-3d.json` 파일이 함께 존재할 수 있다. 본 연구에서는 동일한 운동 수행 샘플이 중복으로 사용되는 것을 방지하고, 3차원 관절 좌표 정보를 일관되게 활용하기 위해 `-3d.json` 파일만 사용한다. 각 `-3d.json` 파일은 하나의 운동 수행 샘플로 간주하며, 파일 내부에는 해당 수행 과정에서 추출된 여러 프레임의 24개 관절 x, y, z 좌표가 포함된다."))
+    blocks.append(paragraph("따라서 원본 데이터의 내부 구조는 프레임별 관절 좌표 데이터이지만, 본 연구의 실험 데이터 단위는 프레임이 아니라 `-3d.json` 파일 단위이다. 각 파일의 프레임 정보를 종합하여 관절별 통계 특징을 생성한 뒤, 이를 하나의 운동 동작 샘플로 모델에 입력하였다."))
     blocks.append(paragraph("라벨 정보는 데이터셋의 명명 규칙 문서와 source data list 문서를 함께 참조하여 구성하였다. 단순히 폴더명만 보고 라벨을 판단하지 않고, 데이터셋 문서에서 제공하는 serial 정보와 라벨 매핑을 기준으로 운동명을 정리하였다. 이 과정을 통해 맨몸운동 17개 라벨을 최종 실험 대상으로 선정하였다."))
     blocks.append(paragraph("본 연구에서 사용한 맨몸운동 라벨은 다음과 같다. 스탠딩 사이드 크런치, 스탠딩 니업, 버피 테스트, 스텝 포워드 다이나믹 런지, 스텝 백워드 다이나믹 런지, 사이드 런지, 크로스 런지, 굿모닝, 라잉 레그 레이즈, 크런치, 바이시클 크런치, 시저크로스, 힙쓰러스트, 플랭크, 푸시업, 니푸쉬업, Y - Exercise."))
     blocks.append(paragraph("데이터 분할은 단순한 파일 단위 무작위 분할이 아니라 촬영 세션 단위 분할을 사용한다. 같은 촬영 세션의 유사한 샘플이 학습 데이터와 평가 데이터에 동시에 포함될 경우 실제 일반화 성능보다 높은 결과가 나올 수 있기 때문이다. 따라서 Train, Validation, Test set은 서로 다른 촬영 세션을 기준으로 구성한다. Train set은 모델 학습에 사용하고, Validation set은 하이퍼파라미터 선택에 사용하며, Test set은 최종 성능 평가에 사용한다."))

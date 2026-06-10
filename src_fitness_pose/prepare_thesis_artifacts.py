@@ -4,7 +4,12 @@ import argparse
 import shutil
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Rectangle
 
 
 DEFAULT_OUTPUT = Path("outputs_fitness_pose") / "thesis_tables_figures"
@@ -76,6 +81,106 @@ def copy_figure(source: Path, figure_dir: Path, new_name: str, rows: list[dict[s
             "note": note,
         }
     )
+
+
+def add_created_figure(target: Path, rows: list[dict[str, str]], placement: str, note: str) -> None:
+    rows.append(
+        {
+            "figure_file": str(target.relative_to(target.parent.parent)).replace("\\", "/"),
+            "source_file": "generated",
+            "recommended_placement": placement,
+            "note": note,
+        }
+    )
+
+
+def draw_box(ax, x: float, y: float, width: float, height: float, text: str, color: str) -> None:
+    box = FancyBboxPatch(
+        (x, y),
+        width,
+        height,
+        boxstyle="round,pad=0.03,rounding_size=0.03",
+        linewidth=1.3,
+        edgecolor="#2F3A4A",
+        facecolor=color,
+    )
+    ax.add_patch(box)
+    ax.text(x + width / 2, y + height / 2, text, ha="center", va="center", fontsize=10, color="#16202A")
+
+
+def draw_arrow(ax, start: tuple[float, float], end: tuple[float, float]) -> None:
+    arrow = FancyArrowPatch(start, end, arrowstyle="-|>", mutation_scale=16, linewidth=1.5, color="#3D4B5F")
+    ax.add_patch(arrow)
+
+
+def create_method_pipeline_figure(path: Path) -> None:
+    labels = [
+        "3D JSON\n(-3d.json)",
+        "Frame-wise\njoint coords",
+        "Normalize\nbody scale",
+        "Statistical\nfeatures",
+        "Model input\nmatrix/vector",
+        "Classification\nmetrics",
+    ]
+    colors = ["#DDEBFF", "#E6F4EA", "#FFF1D6", "#FCE4EC", "#EDE7F6", "#E0F2F1"]
+    fig, ax = plt.subplots(figsize=(12, 3.2), dpi=180)
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 3)
+    ax.axis("off")
+    for index, (label, color) in enumerate(zip(labels, colors, strict=True)):
+        x = 0.25 + index * 1.95
+        draw_box(ax, x, 1.05, 1.45, 0.9, label, color)
+        if index < len(labels) - 1:
+            draw_arrow(ax, (x + 1.47, 1.5), (x + 1.88, 1.5))
+    ax.text(6, 2.65, "Joint-coordinate based exercise classification pipeline", ha="center", va="center", fontsize=13, weight="bold")
+    fig.tight_layout()
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def create_model_structure_figure(path: Path) -> None:
+    fig, ax = plt.subplots(figsize=(12, 5.5), dpi=180)
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 6)
+    ax.axis("off")
+    ax.text(6, 5.65, "Model input structures", ha="center", va="center", fontsize=13, weight="bold")
+
+    draw_box(ax, 0.45, 2.45, 1.8, 1.1, "Joint feature\nmatrix\n[J x F]", "#DDEBFF")
+    draw_arrow(ax, (2.3, 3.0), (3.0, 4.55))
+    draw_arrow(ax, (2.3, 3.0), (3.0, 3.0))
+    draw_arrow(ax, (2.3, 3.0), (3.0, 1.45))
+
+    draw_box(ax, 3.1, 4.15, 2.0, 0.8, "Flatten\nvector", "#FFF1D6")
+    draw_box(ax, 5.65, 4.15, 2.2, 0.8, "SVM / XGBoost", "#FFF8E1")
+    draw_arrow(ax, (5.15, 4.55), (5.6, 4.55))
+    draw_box(ax, 8.45, 4.15, 2.0, 0.8, "Exercise\nlabel", "#E0F2F1")
+    draw_arrow(ax, (7.9, 4.55), (8.4, 4.55))
+
+    graph_panel = Rectangle((3.05, 2.25), 2.1, 1.5, linewidth=1.2, edgecolor="#2F3A4A", facecolor="#E6F4EA")
+    ax.add_patch(graph_panel)
+    nodes = [(3.55, 3.2), (4.2, 3.2), (3.9, 2.75), (4.55, 2.75), (3.45, 2.45)]
+    edges = [(0, 2), (1, 2), (2, 3), (2, 4)]
+    for left, right in edges:
+        ax.plot([nodes[left][0], nodes[right][0]], [nodes[left][1], nodes[right][1]], color="#3D4B5F", linewidth=1.2)
+    for x, y in nodes:
+        ax.add_patch(Circle((x, y), 0.12, color="#4CAF50"))
+    ax.text(4.1, 3.55, "GNN graph\njoints + edges", ha="center", va="center", fontsize=9)
+    draw_box(ax, 5.65, 2.6, 2.2, 0.8, "Graph conv\n+ pooling", "#F1F8E9")
+    draw_arrow(ax, (5.2, 3.0), (5.6, 3.0))
+    draw_box(ax, 8.45, 2.6, 2.0, 0.8, "Exercise\nlabel", "#E0F2F1")
+    draw_arrow(ax, (7.9, 3.0), (8.4, 3.0))
+
+    draw_box(ax, 3.1, 1.05, 2.0, 0.8, "Joint tokens", "#EDE7F6")
+    for token_index in range(5):
+        ax.add_patch(Rectangle((3.35 + token_index * 0.28, 0.78), 0.2, 0.18, facecolor="#7E57C2", edgecolor="#5E35B1"))
+    draw_box(ax, 5.65, 1.05, 2.2, 0.8, "Self-attention\nencoder", "#F3E5F5")
+    draw_arrow(ax, (5.15, 1.45), (5.6, 1.45))
+    draw_box(ax, 8.45, 1.05, 2.0, 0.8, "Exercise\nlabel", "#E0F2F1")
+    draw_arrow(ax, (7.9, 1.45), (8.4, 1.45))
+
+    fig.tight_layout()
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
 
 
 def main() -> None:
@@ -165,6 +270,22 @@ def main() -> None:
     write_table(pose_pivot, table_dir / "table_09_pose_group_macro_f1_by_model")
 
     figure_rows: list[dict[str, str]] = []
+    method_pipeline = figure_dir / "figure_method_01_pipeline.png"
+    method_structure = figure_dir / "figure_method_02_model_structures.png"
+    create_method_pipeline_figure(method_pipeline)
+    create_model_structure_figure(method_structure)
+    add_created_figure(
+        method_pipeline,
+        figure_rows,
+        "3.1 연구 방법론",
+        "프레임별 관절 좌표에서 모델 평가까지 이어지는 전체 실험 파이프라인 그림",
+    )
+    add_created_figure(
+        method_structure,
+        figure_rows,
+        "3.1 연구 방법론",
+        "SVM/XGBoost, GNN, Transformer의 입력 구조 차이를 비교하는 방법론 그림",
+    )
     copy_figure(
         repeated_dir / "repeated_seed_model_comparison.png",
         figure_dir,

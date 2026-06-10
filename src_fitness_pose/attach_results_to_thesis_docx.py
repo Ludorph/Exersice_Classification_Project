@@ -12,7 +12,8 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import xml.etree.ElementTree as ET
 
 
-PLACEHOLDER = "[실험 결과 표 및 그림 첨부 예정]"
+RESULT_PLACEHOLDER = "[실험 결과 표 및 그림 첨부 예정]"
+METHOD_PLACEHOLDER = "[방법론 그림 첨부 예정]"
 REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 CONTENT_TYPES_NS = "http://schemas.openxmlformats.org/package/2006/content-types"
 
@@ -30,14 +31,23 @@ TABLES = [
 ]
 
 
-FIGURES = [
-    ("그림 1. 최종 5-seed 모델 성능 비교", "figure_01_final_repeated_seed_model_comparison.png"),
-    ("그림 2. SVM 대표 혼동행렬(seed 42)", "figure_04_representative_confusion_matrix_svm_seed42.png"),
-    ("그림 3. XGBoost 대표 혼동행렬(seed 42)", "figure_05_representative_confusion_matrix_xgboost_seed42.png"),
-    ("그림 4. 라벨별 F1-score 비교(seed 42)", "figure_06_representative_per_class_f1_seed42.png"),
-    ("그림 5. 자세 그룹별 모델 Macro-F1 비교", "figure_02_pose_group_macro_f1_by_model.png"),
-    ("그림 6. 같은 운동군 예측 비율 Heatmap", "figure_03_same_group_prediction_rate_heatmap.png"),
+METHOD_FIGURES = [
+    ("그림 1. 관절 좌표 기반 운동 동작 분류 전체 파이프라인", "figure_method_01_pipeline.png"),
+    ("그림 2. 모델별 입력 구조 비교", "figure_method_02_model_structures.png"),
 ]
+
+
+RESULT_FIGURES = [
+    ("그림 3. 최종 5-seed 모델 성능 비교", "figure_01_final_repeated_seed_model_comparison.png"),
+    ("그림 4. SVM 대표 혼동행렬(seed 42)", "figure_04_representative_confusion_matrix_svm_seed42.png"),
+    ("그림 5. XGBoost 대표 혼동행렬(seed 42)", "figure_05_representative_confusion_matrix_xgboost_seed42.png"),
+    ("그림 6. 라벨별 F1-score 비교(seed 42)", "figure_06_representative_per_class_f1_seed42.png"),
+    ("그림 7. 자세 그룹별 모델 Macro-F1 비교", "figure_02_pose_group_macro_f1_by_model.png"),
+    ("그림 8. 같은 운동군 예측 비율 Heatmap", "figure_03_same_group_prediction_rate_heatmap.png"),
+]
+
+
+ALL_FIGURES = METHOD_FIGURES + RESULT_FIGURES
 
 
 def parse_args() -> argparse.Namespace:
@@ -152,6 +162,15 @@ def image_xml(rel_id: str, image_path: Path, doc_pr_id: int) -> str:
 """
 
 
+def method_blocks(figure_rel_ids: dict[str, str], figure_dir: Path) -> str:
+    blocks: list[str] = []
+    for doc_id, (caption, filename) in enumerate(METHOD_FIGURES, start=1):
+        blocks.append(paragraph(caption, bold=True, center=True))
+        blocks.append(image_xml(figure_rel_ids[filename], figure_dir / filename, doc_id))
+        blocks.append(paragraph())
+    return "".join(blocks)
+
+
 def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: Path) -> str:
     blocks: list[str] = [
         paragraph("본 절에서는 AI-Hub 피트니스 자세 이미지 데이터셋을 기반으로 수행한 최종 실험 결과를 제시한다. 결과는 데이터 구성, 모델 설정, 최종 성능, 오분류 패턴, 자세 그룹별 분석 순서로 정리하였다."),
@@ -183,8 +202,8 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
     blocks.append(paragraph())
     blocks.append(paragraph("표 6은 하이퍼파라미터 튜닝 전후의 Macro-F1 변화를 비교한 것이다. XGBoost와 GNN은 튜닝 이후 소폭 향상되었고, SVM은 기존 설정과 동일한 수준을 유지하였다. Transformer는 Validation 기준 탐색에서는 개선 가능성이 있었으나 최종 5-seed Test 평균에서는 오히려 낮아졌다. 이는 Validation set에서 좋은 설정이 항상 Test set 반복 평균에서도 더 좋은 결과로 이어지지는 않음을 보여준다."))
     blocks.append(paragraph())
-    blocks.append(paragraph(FIGURES[0][0], bold=True, center=True))
-    blocks.append(image_xml(figure_rel_ids[FIGURES[0][1]], figure_dir / FIGURES[0][1], 1))
+    blocks.append(paragraph(RESULT_FIGURES[0][0], bold=True, center=True))
+    blocks.append(image_xml(figure_rel_ids[RESULT_FIGURES[0][1]], figure_dir / RESULT_FIGURES[0][1], 3))
     blocks.append(paragraph())
 
     blocks.append(paragraph("3.3.4) 오분류 패턴 분석", bold=True))
@@ -193,7 +212,7 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
     blocks.append(paragraph())
     blocks.append(paragraph("표 7의 주요 오분류 조합을 보면, 대부분의 오류는 운동 형태가 비슷한 라벨 사이에서 반복적으로 발생하였다. 특히 스텝 백워드 다이나믹 런지와 스텝 포워드 다이나믹 런지, 니푸쉬업과 푸시업, 바이시클 크런치와 크런치처럼 같은 자세군 또는 같은 운동 계열에 속하는 조합에서 혼동이 두드러졌다. 이는 관절 위치 정보만으로도 전체 운동 분류는 가능하지만, 방향 차이나 지지 방식처럼 세밀한 차이를 구분하는 데에는 추가 특징이 필요할 수 있음을 시사한다."))
     blocks.append(paragraph())
-    for doc_id, (caption, filename) in enumerate(FIGURES[1:4], start=2):
+    for doc_id, (caption, filename) in enumerate(RESULT_FIGURES[1:4], start=4):
         blocks.append(paragraph(caption, bold=True, center=True))
         blocks.append(image_xml(figure_rel_ids[filename], figure_dir / filename, doc_id))
         blocks.append(paragraph())
@@ -205,7 +224,7 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
         blocks.append(paragraph())
     blocks.append(paragraph("표 8과 표 9는 운동 라벨을 자세 특성에 따라 묶어 모델 성능을 비교한 결과이다. 버피 테스트와 같이 전신 움직임이 뚜렷한 전신 복합 운동이나 굿모닝과 같은 고관절 힌지 운동은 비교적 높은 성능을 보였다. 반면 누운 자세 코어 운동, 상지 지지/엎드린 자세 운동처럼 관절 배치가 서로 유사한 그룹에서는 성능이 상대적으로 낮아졌다. 이러한 결과는 오분류가 단순한 모델 오류라기보다 운동 동작 자체의 구조적 유사성과 관련되어 있음을 보여준다."))
     blocks.append(paragraph())
-    for doc_id, (caption, filename) in enumerate(FIGURES[4:6], start=5):
+    for doc_id, (caption, filename) in enumerate(RESULT_FIGURES[4:6], start=7):
         blocks.append(paragraph(caption, bold=True, center=True))
         blocks.append(image_xml(figure_rel_ids[filename], figure_dir / filename, doc_id))
         blocks.append(paragraph())
@@ -254,11 +273,11 @@ def ensure_png_content_type(content_types_xml: bytes) -> bytes:
     return ET.tostring(root, encoding="utf-8", xml_declaration=True)
 
 
-def replace_placeholder(document_xml: str, insertion_xml: str) -> str:
-    pattern = re.compile(r"<w:p\b(?:(?!</w:p>).)*" + re.escape(PLACEHOLDER) + r"(?:(?!</w:p>).)*</w:p>", re.DOTALL)
+def replace_placeholder(document_xml: str, placeholder: str, insertion_xml: str) -> str:
+    pattern = re.compile(r"<w:p\b(?:(?!</w:p>).)*" + re.escape(placeholder) + r"(?:(?!</w:p>).)*</w:p>", re.DOTALL)
     updated, count = pattern.subn(insertion_xml, document_xml, count=1)
     if count != 1:
-        raise ValueError(f"Could not find placeholder paragraph: {PLACEHOLDER}")
+        raise ValueError(f"Could not find placeholder paragraph: {placeholder}")
     return updated
 
 
@@ -294,9 +313,10 @@ def attach_results(source: Path, output: Path, artifact_dir: Path) -> None:
         temp_docx = Path(temp_dir) / "working.docx"
         shutil.copy2(source, temp_docx)
         with ZipFile(temp_docx, "r") as zin:
-            rels_xml, figure_rel_ids = add_image_relationships(zin.read("word/_rels/document.xml.rels"), FIGURES)
-            insertion = result_blocks(table_dir, figure_rel_ids, figure_dir)
-            document_xml = replace_placeholder(zin.read("word/document.xml").decode("utf-8"), insertion)
+            rels_xml, figure_rel_ids = add_image_relationships(zin.read("word/_rels/document.xml.rels"), ALL_FIGURES)
+            document_xml = zin.read("word/document.xml").decode("utf-8")
+            document_xml = replace_placeholder(document_xml, METHOD_PLACEHOLDER, method_blocks(figure_rel_ids, figure_dir))
+            document_xml = replace_placeholder(document_xml, RESULT_PLACEHOLDER, result_blocks(table_dir, figure_rel_ids, figure_dir))
             document_xml = ensure_drawing_namespaces(document_xml)
             content_types_xml = ensure_png_content_type(zin.read("[Content_Types].xml"))
             with ZipFile(output, "w", ZIP_DEFLATED) as zout:
@@ -311,7 +331,7 @@ def attach_results(source: Path, output: Path, artifact_dir: Path) -> None:
                     else:
                         zout.writestr(item, zin.read(item.filename))
                     written.add(item.filename)
-                for _, filename in FIGURES:
+                for _, filename in ALL_FIGURES:
                     media_name = f"word/media/{filename}"
                     if media_name not in written:
                         zout.write(figure_dir / filename, media_name)
