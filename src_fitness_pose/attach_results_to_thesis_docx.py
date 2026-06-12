@@ -83,9 +83,10 @@ def table_xml(rows: list[list[str]]) -> str:
         padded = row + [""] * (column_count - len(row))
         for value in padded:
             bold = "<w:rPr><w:b/></w:rPr>" if row_index == 0 else ""
+            shading = '<w:shd w:val="clear" w:color="auto" w:fill="D9EAF7"/>' if row_index == 0 else ""
             cells.append(
                 "<w:tc>"
-                "<w:tcPr><w:tcW w:w=\"0\" w:type=\"auto\"/></w:tcPr>"
+                f"<w:tcPr><w:tcW w:w=\"0\" w:type=\"auto\"/>{shading}</w:tcPr>"
                 f"<w:p><w:r>{bold}<w:t xml:space=\"preserve\">{esc(value)}</w:t></w:r></w:p>"
                 "</w:tc>"
             )
@@ -95,6 +96,14 @@ def table_xml(rows: list[list[str]]) -> str:
         "<w:tblPr>"
         "<w:tblStyle w:val=\"TableGrid\"/>"
         "<w:tblW w:w=\"0\" w:type=\"auto\"/>"
+        "<w:tblBorders>"
+        "<w:top w:val=\"single\" w:sz=\"8\" w:space=\"0\" w:color=\"000000\"/>"
+        "<w:left w:val=\"single\" w:sz=\"8\" w:space=\"0\" w:color=\"000000\"/>"
+        "<w:bottom w:val=\"single\" w:sz=\"8\" w:space=\"0\" w:color=\"000000\"/>"
+        "<w:right w:val=\"single\" w:sz=\"8\" w:space=\"0\" w:color=\"000000\"/>"
+        "<w:insideH w:val=\"single\" w:sz=\"8\" w:space=\"0\" w:color=\"000000\"/>"
+        "<w:insideV w:val=\"single\" w:sz=\"8\" w:space=\"0\" w:color=\"000000\"/>"
+        "</w:tblBorders>"
         "<w:tblLook w:val=\"04A0\" w:firstRow=\"1\" w:lastRow=\"0\" w:firstColumn=\"1\" w:lastColumn=\"0\" w:noHBand=\"0\" w:noVBand=\"1\"/>"
         "</w:tblPr>"
         f"<w:tblGrid>{grid}</w:tblGrid>"
