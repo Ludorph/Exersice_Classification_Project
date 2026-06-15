@@ -22,16 +22,27 @@ def esc(text: str) -> str:
     return html.escape(text, quote=False)
 
 
-def paragraph(text: str = "", *, bold: bool = False, center: bool = False) -> str:
+def run_properties(*, bold: bool = False, size: int = 20) -> str:
+    bold_xml = "<w:b/>" if bold else ""
+    return (
+        "<w:rPr>"
+        '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Times New Roman"/>'
+        f"{bold_xml}"
+        f'<w:sz w:val="{size}"/>'
+        f'<w:szCs w:val="{size}"/>'
+        "</w:rPr>"
+    )
+
+
+def paragraph(text: str = "", *, bold: bool = False, center: bool = False, size: int = 20) -> str:
     if not text:
         return "<w:p/>"
-    bold_xml = "<w:rPr><w:b/></w:rPr>" if bold else ""
     align_xml = '<w:pPr><w:jc w:val="center"/></w:pPr>' if center else ""
     return (
         "<w:p>"
         f"{align_xml}"
         "<w:r>"
-        f"{bold_xml}"
+        f"{run_properties(bold=bold, size=size)}"
         f'<w:t xml:space="preserve">{esc(text)}</w:t>'
         "</w:r>"
         "</w:p>"
@@ -67,16 +78,16 @@ def doc_xml(body_blocks: list[str]) -> str:
 def revised_blocks() -> list[str]:
     blocks: list[str] = []
 
-    blocks.append(paragraph("관절 위치 정보 기반 운동 동작 분류 및 SVM, XGBoost, GNN, Transformer 모델 성능 비교 분석", center=True))
+    blocks.append(paragraph("관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석", center=True, size=36))
     blocks.append(paragraph())
 
     blocks.append(paragraph("1. 제목 및 저자", bold=True))
     blocks.append(paragraph("1.1) 논문제목", bold=True))
-    blocks.append(paragraph(": 관절 위치 정보 기반 운동 동작 분류에서 SVM, XGBoost, GNN, Transformer 모델 성능 및 오분류 패턴 비교 분석"))
+    blocks.append(paragraph(": 관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석"))
     blocks.append(paragraph("1.2) 저자", bold=True))
     blocks.append(paragraph(": 김한서, 손석기, 최서혁"))
-    blocks.append(paragraph("1.3) 논문 키워드", bold=True))
-    blocks.append(paragraph(": 운동 동작 분류, 관절 위치 정보, 3D 관절 좌표, AI-Hub 피트니스 자세 데이터셋, SVM, XGBoost, GNN, Transformer, 오분류 분석"))
+    blocks.append(paragraph("1.3) 논문 키워드", bold=True, size=18))
+    blocks.append(paragraph(": 운동 동작 분류, 관절 위치 정보, 3D 관절 좌표, AI-Hub 피트니스 자세 데이터셋, SVM, XGBoost, GNN, Transformer, 오분류 분석", size=18))
     blocks.append(paragraph())
 
     blocks.append(paragraph("2. 연구 배경 및 목적", bold=True))
@@ -191,13 +202,13 @@ def revised_blocks() -> list[str]:
     blocks.append(paragraph("기대 효과는 다음과 같다. 첫째, 원본 영상이 아닌 관절 좌표만으로도 운동 동작 분류가 가능한지 확인할 수 있다. 둘째, 모델별 성능 비교를 통해 관절 좌표 기반 운동 분류에 적합한 모델 선택 기준을 제시할 수 있다. 셋째, 오분류 패턴과 자세 그룹별 분석을 통해 유사 운동군 내부의 세밀한 구분이 왜 어려운지 설명할 수 있다. 넷째, 향후 스마트 피트니스, 홈트레이닝 피드백, 재활 운동 보조 시스템의 기초 연구로 활용될 수 있다."))
     blocks.append(paragraph("다만 본 연구는 실시간 서비스 구현이나 운동 자세의 정확도 평가까지 포함하지 않으므로, 실제 응용 시스템으로 확장하기 위해서는 실시간 추론 속도, 사용자별 신체 차이, 카메라 각도 변화, 잘못된 자세와 올바른 자세의 구분 문제를 추가로 고려해야 한다."))
 
-    blocks.append(paragraph("5. 참고문헌", bold=True))
-    blocks.append(paragraph("[1] AI-Hub, 피트니스 자세 이미지 데이터셋, https://aihub.or.kr/aihubdata/data/view.do?dataSetSn=231."))
-    blocks.append(paragraph("[2] T. Chen and C. Guestrin, XGBoost: A Scalable Tree Boosting System, Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2016."))
-    blocks.append(paragraph("[3] C. Cortes and V. Vapnik, Support-Vector Networks, Machine Learning, 1995."))
-    blocks.append(paragraph("[4] T. N. Kipf and M. Welling, Semi-Supervised Classification with Graph Convolutional Networks, International Conference on Learning Representations, 2017."))
-    blocks.append(paragraph("[5] A. Vaswani et al., Attention Is All You Need, Advances in Neural Information Processing Systems, 2017."))
-    blocks.append(paragraph("[6] Z. Cao et al., OpenPose: Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields, IEEE Transactions on Pattern Analysis and Machine Intelligence, 2021."))
+    blocks.append(paragraph("5. 참고문헌", bold=True, size=18))
+    blocks.append(paragraph("[1] AI-Hub, 피트니스 자세 이미지 데이터셋, https://aihub.or.kr/aihubdata/data/view.do?dataSetSn=231.", size=18))
+    blocks.append(paragraph("[2] T. Chen and C. Guestrin, XGBoost: A Scalable Tree Boosting System, Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 2016.", size=18))
+    blocks.append(paragraph("[3] C. Cortes and V. Vapnik, Support-Vector Networks, Machine Learning, 1995.", size=18))
+    blocks.append(paragraph("[4] T. N. Kipf and M. Welling, Semi-Supervised Classification with Graph Convolutional Networks, International Conference on Learning Representations, 2017.", size=18))
+    blocks.append(paragraph("[5] A. Vaswani et al., Attention Is All You Need, Advances in Neural Information Processing Systems, 2017.", size=18))
+    blocks.append(paragraph("[6] Z. Cao et al., OpenPose: Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields, IEEE Transactions on Pattern Analysis and Machine Intelligence, 2021.", size=18))
     return blocks
 
 

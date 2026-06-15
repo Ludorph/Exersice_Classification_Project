@@ -64,11 +64,23 @@ def esc(text: object) -> str:
     return html.escape(value, quote=False)
 
 
-def paragraph(text: str = "", *, bold: bool = False, center: bool = False) -> str:
+def run_properties(*, bold: bool = False, size: int = 20) -> str:
+    bold_xml = "<w:b/>" if bold else ""
+    return (
+        "<w:rPr>"
+        '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Times New Roman"/>'
+        f"{bold_xml}"
+        f'<w:sz w:val="{size}"/>'
+        f'<w:szCs w:val="{size}"/>'
+        "</w:rPr>"
+    )
+
+
+def paragraph(text: str = "", *, bold: bool = False, center: bool = False, size: int = 20) -> str:
     if not text:
         return "<w:p/>"
     ppr = '<w:pPr><w:jc w:val="center"/></w:pPr>' if center else ""
-    rpr = "<w:rPr><w:b/></w:rPr>" if bold else ""
+    rpr = run_properties(bold=bold, size=size)
     return f"<w:p>{ppr}<w:r>{rpr}<w:t xml:space=\"preserve\">{esc(text)}</w:t></w:r></w:p>"
 
 
@@ -82,12 +94,12 @@ def table_xml(rows: list[list[str]]) -> str:
         cells = []
         padded = row + [""] * (column_count - len(row))
         for value in padded:
-            bold = "<w:rPr><w:b/></w:rPr>" if row_index == 0 else ""
+            rpr = run_properties(bold=row_index == 0)
             shading = '<w:shd w:val="clear" w:color="auto" w:fill="D9EAF7"/>' if row_index == 0 else ""
             cells.append(
                 "<w:tc>"
                 f"<w:tcPr><w:tcW w:w=\"0\" w:type=\"auto\"/>{shading}</w:tcPr>"
-                f"<w:p><w:r>{bold}<w:t xml:space=\"preserve\">{esc(value)}</w:t></w:r></w:p>"
+                f"<w:p><w:r>{rpr}<w:t xml:space=\"preserve\">{esc(value)}</w:t></w:r></w:p>"
                 "</w:tc>"
             )
         table_rows.append("<w:tr>" + "".join(cells) + "</w:tr>")
@@ -185,7 +197,7 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
     blocks: list[str] = [
         paragraph("본 절에서는 AI-Hub 피트니스 자세 이미지 데이터셋을 기반으로 수행한 최종 실험 결과를 제시한다. 결과는 데이터 구성, 모델 설정, 최종 성능, 오분류 패턴, 자세 그룹별 분석 순서로 정리하였다."),
         paragraph("최종 성능은 단일 실행 결과가 아니라 5개 random seed 반복 실험의 평균과 표준편차를 기준으로 제시한다. 혼동행렬과 라벨별 F1-score 그림은 대표 seed 42 결과를 사용하므로, 성능 수치의 최종 기준은 반복 seed 평균 표이다."),
-        paragraph("3.3.1) 데이터셋 및 분할 결과", bold=True),
+        paragraph("4.1) 데이터셋 및 분할 결과", bold=True),
     ]
     for caption, filename in TABLES[:3]:
         blocks.append(paragraph(caption, bold=True))
@@ -194,14 +206,14 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
     blocks.append(paragraph("표 1부터 표 3까지는 빈 frame을 가진 JSON 파일을 제외한 뒤 실제 모델 학습과 평가에 사용한 유효 샘플을 기준으로 정리한 결과이다. 전체 데이터는 17개 맨몸운동 라벨로 구성되며, 같은 촬영 세션의 샘플이 서로 다른 분할에 동시에 포함되지 않도록 Train, Validation, Test를 촬영 세션 단위로 나누었다. 이를 통해 동일 인물 또는 동일 촬영 환경의 영향이 학습과 평가에 중복 반영되는 문제를 줄이고자 하였다."))
     blocks.append(paragraph())
 
-    blocks.append(paragraph("3.3.2) 모델 구조 및 하이퍼파라미터", bold=True))
+    blocks.append(paragraph("4.2) 모델 구조 및 하이퍼파라미터", bold=True))
     blocks.append(paragraph(TABLES[3][0], bold=True))
     blocks.append(table_xml(read_csv_table(table_dir / TABLES[3][1])))
     blocks.append(paragraph())
     blocks.append(paragraph("표 4는 최종 실험에 사용한 모델 구조와 주요 하이퍼파라미터를 나타낸다. SVM과 XGBoost는 관절 좌표로부터 생성한 정형 특징 벡터를 입력으로 사용하였고, GNN과 Transformer는 관절별 특징 행렬을 입력으로 사용하여 관절 간 구조적 관계를 학습하도록 구성하였다. 하이퍼파라미터는 Validation set 성능을 기준으로 소규모 탐색을 수행한 뒤 최종 반복 실험에 적용하였다."))
     blocks.append(paragraph())
 
-    blocks.append(paragraph("3.3.3) 최종 성능 비교", bold=True))
+    blocks.append(paragraph("4.3) 최종 성능 비교", bold=True))
     blocks.append(paragraph(TABLES[4][0], bold=True))
     blocks.append(table_xml(read_csv_table(table_dir / TABLES[4][1])))
     blocks.append(paragraph())
@@ -216,7 +228,7 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
     blocks.append(image_xml(figure_rel_ids[RESULT_FIGURES[0][1]], figure_dir / RESULT_FIGURES[0][1], 3))
     blocks.append(paragraph())
 
-    blocks.append(paragraph("3.3.4) 오분류 패턴 분석", bold=True))
+    blocks.append(paragraph("4.4) 오분류 패턴 분석", bold=True))
     blocks.append(paragraph(TABLES[6][0], bold=True))
     blocks.append(table_xml(read_csv_table(table_dir / TABLES[6][1])))
     blocks.append(paragraph())
@@ -227,7 +239,7 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
         blocks.append(image_xml(figure_rel_ids[filename], figure_dir / filename, doc_id))
         blocks.append(paragraph())
 
-    blocks.append(paragraph("3.3.5) 자세 그룹별 분석", bold=True))
+    blocks.append(paragraph("4.5) 자세 그룹별 분석", bold=True))
     for caption, filename in TABLES[7:]:
         blocks.append(paragraph(caption, bold=True))
         blocks.append(table_xml(read_csv_table(table_dir / filename)))
