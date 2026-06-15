@@ -63,6 +63,17 @@ def paragraph(text: str = "", *, bold: bool = False, center: bool = False, size:
     )
 
 
+def reference_paragraph(text: str, *, size: int = 18) -> str:
+    return (
+        '<w:p><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr>'
+        "<w:r>"
+        f"{run_properties(size=size)}"
+        f'<w:t xml:space="preserve">{esc(text)}</w:t>'
+        "</w:r>"
+        "</w:p>"
+    )
+
+
 def equation(text: str) -> str:
     return (
         '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
@@ -170,6 +181,13 @@ def formatted_blocks() -> list[str]:
             "본 연구에서 사용한 데이터는 AI-Hub 피트니스 자세 이미지 데이터셋이다. 해당 데이터셋은 운동 "
             "이미지 및 자세 주석 정보를 포함하며, 본 연구에서는 중복 입력을 줄이고 3차원 관절 정보를 "
             "활용하기 위해 -3d.json 파일만 사용하였다."
+        )
+    )
+    blocks.append(
+        paragraph(
+            "이 연구는 과학기술정보통신부의 재원으로 한국지능정보사회진흥원의 지원을 받아 구축된 "
+            "\"피트니스 자세 이미지 데이터셋\"을 활용하여 수행된 연구이다. 본 연구에 활용된 데이터는 "
+            "AI 허브(aihub.or.kr)에서 다운로드 받을 수 있다."
         )
     )
     blocks.append(
@@ -328,14 +346,21 @@ def formatted_blocks() -> list[str]:
 
     blocks.append(paragraph("6. References", bold=True, size=18))
     references = [
-        "Cortes, C., & Vapnik, V. (1995). Support-vector networks. Machine Learning, 20, 273-297.",
-        "Chen, T., & Guestrin, C. (2016). XGBoost: A scalable tree boosting system. Proceedings of KDD.",
-        "Kipf, T. N., & Welling, M. (2017). Semi-supervised classification with graph convolutional networks. ICLR.",
-        "Vaswani, A. et al. (2017). Attention is all you need. NeurIPS.",
-        "AI-Hub. 피트니스 자세 이미지 데이터셋.",
+        "S. Yan, Y. Xiong, and D. Lin, “Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action Recognition,” Proceedings of the AAAI Conference on Artificial Intelligence, 2018.",
+        "P. Lee, T.-B. Chen, H.-Y. Lin, L.-R. Yeh, C.-H. Liu, and Y.-L. Chen, “Integrating OpenPose and SVM for Quantitative Postural Analysis in Young Adults: A Temporal-Spatial Approach,” Bioengineering, vol. 11, no. 6, 548, 2024, doi: 10.3390/bioengineering11060548.",
+        "C. Zhang, L. Liu, M. Yao, W. Chen, D. Chen, and Y. Wu, “HSiPu2 - A New Human Physical Fitness Action Dataset for Recognition and 3D Reconstruction Evaluation,” Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops, 2021.",
+        "M. Kang and J. Kang, “인체 골격 정보를 이용한 Multiclass SVM 기반의 자세 인식 분류 기법,” Proceedings of the Korean Society of Broadcast Engineers Conference, Korea, 2015.",
+        "J. Shin, Y. Park, and T. Lee, “운동 자세 분류 모델 제작에 관한 연구,” The Study for Modeling Work-Out Pose Classification.",
+        "J. M. Kang, S. Park, Y. S. Kim, and J. K. Gahm, “홈 트레이닝을 위한 운동 동작 분류 및 교정 시스템,” Journal of the Korea Institute of Information and Communication Engineering, vol. 25, no. 9, pp. 1183-1189, 2021.",
+        "C. Cortes and V. Vapnik, “Support-vector networks,” Machine Learning, vol. 20, pp. 273-297, 1995.",
+        "T. Chen and C. Guestrin, “XGBoost: A scalable tree boosting system,” Proceedings of the ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, pp. 785-794, 2016.",
+        "T. N. Kipf and M. Welling, “Semi-supervised classification with graph convolutional networks,” International Conference on Learning Representations, 2017.",
+        "A. Vaswani et al., “Attention is all you need,” Advances in Neural Information Processing Systems, 2017.",
+        "AI-Hub, “피트니스 자세 이미지 데이터셋,” AI-Hub.",
+        "AI-Hub, “자주찾는질문: 논문 작성 시 주의해야 할 이용정책과 명시 문구,” [Online]. Available: https://aihub.or.kr/aihubnews/faq/list.do",
     ]
-    for ref in references:
-        blocks.append(paragraph(ref, size=18))
+    for index, ref in enumerate(references, start=1):
+        blocks.append(reference_paragraph(f"[{index}]  {ref}", size=18))
 
     return blocks
 
