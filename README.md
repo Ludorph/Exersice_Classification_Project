@@ -76,7 +76,11 @@ src_fitness_pose/
   analyze_misclassifications.py
   analyze_pose_groups.py
   prepare_thesis_artifacts.py
+  rewrite_thesis_docx.py
+  rewrite_thesis_format_docx.py
   attach_results_to_thesis_docx.py
+  format_thesis_docx.py
+  style_docx_tables.py
   export_reference_5_exercises.py
 
 requirements_fitness_pose.txt
@@ -89,13 +93,17 @@ FITNESS_POSE_PIPELINE.md
 |---|---|
 | `configs_fitness_pose/` | 실험 설정 파일 |
 | `src_fitness_pose/` | 실제 실험 코드 |
-| `outputs_fitness_pose/` | 실험 결과 저장 위치 |
+| `outputs_fitness_pose/` | 모델 실험 결과, 반복 seed 결과, 튜닝 결과, 오분류 분석, 자세 그룹 분석, 논문용 표·그림 저장 위치 |
 | `exports/` | 따로 뽑아낸 기준 데이터셋 저장 위치 |
 | `dataset/` | AI-Hub 원본 데이터 위치 |
 | `FITNESS_POSE_PIPELINE.md` | 날짜별 작업 기록과 자세한 실험 로그 |
 
 `dataset/`, `outputs_fitness_pose/`, `exports/`는 GitHub에 올리지 않는 폴더입니다.
 실행하면 각자 컴퓨터에서 생성되거나 직접 준비해야 합니다.
+
+특히 `outputs_fitness_pose/`는 소스코드가 아니라 실험을 실행한 뒤 생기는 결과
+폴더입니다. 최종 성능 CSV, 혼동행렬 그림, 오분류 분석 파일, 자세 그룹별 분석
+파일, 논문에 첨부한 표와 그림이 이 폴더 아래에 저장됩니다.
 
 ## 4. 설치 방법
 
@@ -191,15 +199,25 @@ outputs_fitness_pose/thesis_tables_figures/
 ### 5.8. 논문 docx에 표와 그림 첨부
 
 ```powershell
-python -m src_fitness_pose.attach_results_to_thesis_docx
+python -m src_fitness_pose.attach_results_to_thesis_docx `
+  --source "관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석_논문포맷적용본.docx" `
+  --output "관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석_논문포맷적용본.docx"
 ```
 
 논문 문서에 결과 표와 그림을 자동으로 첨부합니다.
 
-표 스타일을 다시 적용하고 싶다면 다음 명령을 사용합니다.
+논문 포맷에 맞춘 본문 구조를 다시 생성하고 싶다면 다음 명령을 사용합니다.
 
 ```powershell
-python -m src_fitness_pose.style_docx_tables "공학논문연구_실험결과_AIHub_표그림첨부본_검수수정본.docx"
+python -m src_fitness_pose.rewrite_thesis_format_docx `
+  --source "관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석.docx" `
+  --output "관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석_논문포맷적용본.docx"
+```
+
+표 스타일만 다시 적용하고 싶다면 다음 명령을 사용합니다.
+
+```powershell
+python -m src_fitness_pose.style_docx_tables "관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석_논문포맷적용본.docx"
 ```
 
 ## 6. 주요 결과 파일
@@ -319,5 +337,5 @@ FITNESS_POSE_PIPELINE.md
 프로젝트의 최종 논문 문서 파일은 루트 폴더의 다음 파일입니다.
 
 ```text
-공학논문연구_실험결과_AIHub_표그림첨부본_검수수정본.docx
+관절 위치 정보 기반 운동 동작 분류 및 성능 및 오분류 패턴 비교 분석_논문포맷적용본.docx
 ```

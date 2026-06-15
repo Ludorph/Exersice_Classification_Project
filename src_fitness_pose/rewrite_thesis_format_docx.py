@@ -13,6 +13,7 @@ R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 WP_NS = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 PIC_NS = "http://schemas.openxmlformats.org/drawingml/2006/picture"
+M_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 
 
 def parse_args() -> argparse.Namespace:
@@ -62,6 +63,15 @@ def paragraph(text: str = "", *, bold: bool = False, center: bool = False, size:
     )
 
 
+def equation(text: str) -> str:
+    return (
+        '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
+        "<m:oMathPara><m:oMath>"
+        f"<m:r><m:t>{esc(text)}</m:t></m:r>"
+        "</m:oMath></m:oMathPara></w:p>"
+    )
+
+
 def bullets(items: list[str], *, size: int = 20) -> list[str]:
     return [paragraph(f"- {item}", size=size) for item in items]
 
@@ -78,7 +88,7 @@ def doc_xml(body_blocks: list[str]) -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         f'<w:document xmlns:w="{W_NS}" xmlns:r="{R_NS}" xmlns:wp="{WP_NS}" '
-        f'xmlns:a="{A_NS}" xmlns:pic="{PIC_NS}"><w:body>'
+        f'xmlns:a="{A_NS}" xmlns:pic="{PIC_NS}" xmlns:m="{M_NS}"><w:body>'
         + "".join(body_blocks)
         + section
         + "</w:body></w:document>"
@@ -95,7 +105,11 @@ def formatted_blocks() -> list[str]:
     )
 
     blocks.append(paragraph(title, center=True, bold=True, size=36))
-    blocks.append(paragraph("김한서, 손석기, 최서혁", center=True, size=20))
+    blocks.append(paragraph("김한서", center=True, size=20))
+    blocks.append(paragraph("유한대학교 컴퓨터공학과", center=True, size=20))
+    blocks.append(paragraph("손석기", center=True, size=20))
+    blocks.append(paragraph("유한대학교 컴퓨터공학과", center=True, size=20))
+    blocks.append(paragraph("최서혁", center=True, size=20))
     blocks.append(paragraph("유한대학교 컴퓨터공학과", center=True, size=20))
     blocks.append(paragraph())
 
@@ -104,12 +118,12 @@ def formatted_blocks() -> list[str]:
         paragraph(
             "본 연구는 AI-Hub 피트니스 자세 이미지 데이터셋의 3D 관절 좌표를 활용하여 "
             "맨몸운동 17개 동작을 분류하고, SVM, XGBoost, GNN, Transformer 모델의 성능과 "
-            "오분류 패턴을 비교 분석하였다. 각 -3d.json 파일을 하나의 운동 수행 샘플로 정의하고, "
-            "프레임별 24개 관절 좌표를 통계 특징으로 변환하였다. 최종 5-seed 반복 실험 결과 "
-            "SVM과 XGBoost가 가장 안정적인 성능을 보였으며, 주요 오분류는 푸시업-니푸쉬업, "
-            "런지 계열, 크런치 계열처럼 자세와 관절 움직임이 유사한 라벨 사이에서 집중적으로 발생하였다. "
-            "이를 통해 관절 위치 정보 기반 운동 동작 분류에서 모델별 성능 차이뿐 아니라 "
-            "운동 자세의 구조적 유사성이 오분류에 미치는 영향을 확인하였다.",
+            "오분류 패턴을 비교한다. 각 -3d.json 파일은 하나의 운동 수행 샘플로 정의하고, "
+            "프레임별 24개 관절 좌표를 통계 특징으로 변환하였다. 5개 random seed 반복 실험에서 "
+            "SVM과 XGBoost가 가장 안정적인 성능을 보였고, 주요 오분류는 푸시업-니푸쉬업, "
+            "런지 계열, 크런치 계열처럼 자세와 관절 움직임이 유사한 라벨 사이에 집중되었다. "
+            "이 결과는 관절 좌표 기반 운동 동작 분류에서 모델 성능뿐 아니라 라벨 간 구조적 유사성도 "
+            "함께 고려해야 함을 보여준다.",
             size=18,
         )
     )
@@ -174,6 +188,14 @@ def formatted_blocks() -> list[str]:
     )
     blocks.append(
         paragraph(
+            "사용 라벨은 Y - Exercise, 굿모닝, 니푸쉬업, 라잉 레그 레이즈, 바이시클 크런치, 버피 테스트, "
+            "사이드 런지, 스탠딩 니업, 스탠딩 사이드 크런치, 스텝 백워드 다이나믹 런지, "
+            "스텝 포워드 다이나믹 런지, 시저크로스, 크런치, 크로스 런지, 푸시업, 플랭크, "
+            "힘쓰러스트이다. 이 중 Y - Exercise는 데이터셋에 명시된 원 라벨명을 그대로 사용하였다."
+        )
+    )
+    blocks.append(
+        paragraph(
             "Validation set은 모델 설정과 하이퍼파라미터를 선택하기 위한 중간 검증 데이터이며, Test set은 "
             "최종 성능을 확인하기 위한 평가 데이터이다. 따라서 Test 성능은 모델 선택이 끝난 뒤의 최종 "
             "비교 지표로 사용하였다."
@@ -189,23 +211,25 @@ def formatted_blocks() -> list[str]:
             "프레임 수, J는 관절 수를 의미한다."
         )
     )
-    blocks.append(paragraph("(1) X_i = {p_{t,j} | t = 1,...,T_i, j = 1,...,J}"))
-    blocks.append(paragraph("(2) p_{t,j} = (x_{t,j}, y_{t,j}, z_{t,j})"))
+    blocks.append(equation("(1)  X_i = {p_{t,j} | t = 1,...,T_i, j = 1,...,J}"))
+    blocks.append(equation("(2)  p_{t,j} = (x_{t,j}, y_{t,j}, z_{t,j})"))
     blocks.append(
         paragraph(
             "각 관절에 대해 평균, 표준편차, 최솟값, 최댓값, 움직임 범위, 시작-종료 변화량, 평균 이동량을 "
             "계산하였다. 대표적인 특징 수식은 다음과 같다."
         )
     )
-    blocks.append(paragraph("(3) mean_j = (1 / T_i) sum_{t=1}^{T_i} p_{t,j}"))
-    blocks.append(paragraph("(4) std_j = sqrt((1 / T_i) sum_{t=1}^{T_i} ||p_{t,j} - mean_j||^2)"))
-    blocks.append(paragraph("(5) range_j = max_t(p_{t,j}) - min_t(p_{t,j})"))
-    blocks.append(paragraph("(6) delta_j = p_{T_i,j} - p_{1,j}"))
-    blocks.append(paragraph("(7) move_j = (1 / (T_i - 1)) sum_{t=2}^{T_i} ||p_{t,j} - p_{t-1,j}||"))
+    blocks.append(equation("(3)  mean_j = (1 / T_i) sum_{t=1}^{T_i} p_{t,j}"))
+    blocks.append(equation("(4)  std_j = sqrt((1 / T_i) sum_{t=1}^{T_i} ||p_{t,j} - mean_j||^2)"))
+    blocks.append(equation("(5)  range_j = max_t(p_{t,j}) - min_t(p_{t,j})"))
+    blocks.append(equation("(6)  delta_j = p_{T_i,j} - p_{1,j}"))
+    blocks.append(equation("(7)  move_j = (1 / (T_i - 1)) sum_{t=2}^{T_i} ||p_{t,j} - p_{t-1,j}||"))
     blocks.append(
         paragraph(
             "SVM과 XGBoost에는 관절별 통계 특징을 1차원 벡터로 펼친 입력을 사용하였다. GNN과 Transformer에는 "
-            "관절을 개별 노드 또는 token으로 유지한 관절별 특징 행렬을 입력으로 사용하였다."
+            "관절을 개별 노드 또는 token으로 유지한 관절별 특징 행렬을 입력으로 사용하였다. 이러한 입력 "
+            "형식의 차이는 결과 해석과도 연결된다. 즉, SVM과 XGBoost는 요약된 정형 특징 벡터에 강점을 "
+            "보일 수 있고, GNN과 Transformer는 관절 간 구조적 관계를 학습하는 데 초점을 둔다."
         )
     )
     blocks.append(paragraph("[방법론 그림 첨부 예정]"))
@@ -217,30 +241,30 @@ def formatted_blocks() -> list[str]:
             "대한 결정 함수 값을 계산하고, 가장 큰 값을 갖는 클래스를 최종 예측 라벨로 선택한다."
         )
     )
-    blocks.append(paragraph("(8) K(x_i, x_j) = exp(-gamma ||x_i - x_j||^2)"))
+    blocks.append(equation("(8)  K(x_i, x_j) = exp(-gamma ||x_i - x_j||^2)"))
     blocks.append(
         paragraph(
             "XGBoost는 여러 개의 decision tree를 순차적으로 결합하는 gradient boosting 기반 앙상블 모델이다. "
             "각 샘플의 예측값은 여러 tree의 출력 합으로 표현된다."
         )
     )
-    blocks.append(paragraph("(9) y_hat_i = sum_{k=1}^{K} f_k(x_i),  f_k in F"))
-    blocks.append(paragraph("(10) Obj = sum_i l(y_i, y_hat_i) + sum_{k=1}^{K} Omega(f_k)"))
+    blocks.append(equation("(9)  y_hat_i = sum_{k=1}^{K} f_k(x_i),  f_k in F"))
+    blocks.append(equation("(10)  Obj = sum_i l(y_i, y_hat_i) + sum_{k=1}^{K} Omega(f_k)"))
     blocks.append(
         paragraph(
             "GNN은 관절을 노드로, 인체 골격 연결 관계를 edge로 정의하여 관절 간 구조적 관계를 학습한다. "
             "정규화된 인접행렬과 그래프 합성곱 연산은 다음과 같다."
         )
     )
-    blocks.append(paragraph("(11) A_hat = D^(-1/2)(A + I)D^(-1/2)"))
-    blocks.append(paragraph("(12) H^(l+1) = sigma(A_hat H^(l) W^(l))"))
+    blocks.append(equation("(11)  A_hat = D^(-1/2)(A + I)D^(-1/2)"))
+    blocks.append(equation("(12)  H^(l+1) = sigma(A_hat H^(l) W^(l))"))
     blocks.append(
         paragraph(
             "Transformer는 각 관절을 token으로 보고 self-attention을 적용하여 관절 간 상호작용을 학습한다. "
             "self-attention의 기본 식은 다음과 같다."
         )
     )
-    blocks.append(paragraph("(13) Attention(Q, K, V) = softmax(QK^T / sqrt(d_k))V"))
+    blocks.append(equation("(13)  Attention(Q, K, V) = softmax(QK^T / sqrt(d_k))V"))
 
     blocks.append(paragraph("3.3) 학습 및 평가 지표", bold=True))
     blocks.append(
@@ -248,7 +272,7 @@ def formatted_blocks() -> list[str]:
             "GNN과 Transformer는 다중 클래스 분류 문제로 학습하였으며, 손실 함수로 Cross-Entropy Loss를 사용하였다."
         )
     )
-    blocks.append(paragraph("(14) L = - sum_{c=1}^{C} y_c log(p_c)"))
+    blocks.append(equation("(14)  L = - sum_{c=1}^{C} y_c log(p_c)"))
     blocks.append(
         paragraph(
             "성능 평가는 Accuracy, Precision, Recall, F1-score, Macro-F1, Weighted-F1을 기준으로 수행하였다. "
@@ -256,22 +280,22 @@ def formatted_blocks() -> list[str]:
             "Macro-F1을 주요 비교 지표로 사용하였다."
         )
     )
-    blocks.append(paragraph("(15) Accuracy = (TP + TN) / (TP + TN + FP + FN)"))
-    blocks.append(paragraph("(16) Precision = TP / (TP + FP)"))
-    blocks.append(paragraph("(17) Recall = TP / (TP + FN)"))
-    blocks.append(paragraph("(18) F1 = 2 * Precision * Recall / (Precision + Recall)"))
-    blocks.append(paragraph("(19) Macro-F1 = (1 / C) sum_{c=1}^{C} F1_c"))
-    blocks.append(paragraph("(20) Weighted-F1 = sum_{c=1}^{C} (n_c / N) F1_c"))
+    blocks.append(
+        paragraph(
+            "다중 클래스 분류에서 Accuracy는 전체 N개 평가 샘플 중 실제 라벨 y_i와 예측 라벨 "
+            "y_hat_i가 일치한 비율로 해석한다. Precision, Recall, F1-score는 각 클래스별로 계산한 뒤 "
+            "Macro-F1 또는 Weighted-F1 방식으로 평균낸다."
+        )
+    )
+    blocks.append(equation("(15)  Accuracy = (1 / N) sum_{i=1}^{N} I(y_i = y_hat_i)"))
+    blocks.append(equation("(16)  Precision_c = TP_c / (TP_c + FP_c)"))
+    blocks.append(equation("(17)  Recall_c = TP_c / (TP_c + FN_c)"))
+    blocks.append(equation("(18)  F1_c = 2 * Precision_c * Recall_c / (Precision_c + Recall_c)"))
+    blocks.append(equation("(19)  Macro-F1 = (1 / C) sum_{c=1}^{C} F1_c"))
+    blocks.append(equation("(20)  Weighted-F1 = sum_{c=1}^{C} (n_c / N) F1_c"))
     blocks.append(paragraph())
 
     blocks.append(paragraph("4. Numerical results", bold=True))
-    blocks.append(
-        paragraph(
-            "본 절에서는 데이터셋 구성, 모델 하이퍼파라미터, 최종 반복 실험 결과, 오분류 패턴, 자세 그룹별 "
-            "분석 결과를 제시한다. 최종 성능은 단일 실행 결과가 아니라 seed 42, 7, 21, 100, 2026의 "
-            "5회 반복 실험 평균을 기준으로 비교하였다."
-        )
-    )
     blocks.append(paragraph("[실험 결과 표 및 그림 첨부 예정]"))
     blocks.append(paragraph())
 

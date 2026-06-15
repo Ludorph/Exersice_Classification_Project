@@ -217,7 +217,7 @@ def result_blocks(table_dir: Path, figure_rel_ids: dict[str, str], figure_dir: P
     blocks.append(paragraph(TABLES[4][0], bold=True))
     blocks.append(table_xml(read_csv_table(table_dir / TABLES[4][1])))
     blocks.append(paragraph())
-    blocks.append(paragraph("표 5의 최종 5-seed 반복 실험 결과에서 SVM은 Macro-F1 0.9044로 가장 높은 평균 성능을 보였고, XGBoost는 Macro-F1 0.9006으로 SVM과 매우 근접한 성능을 보였다. Transformer와 GNN은 각각 0.8770, 0.8462의 Macro-F1을 기록하여 전통적 머신러닝 모델보다 낮은 성능을 보였다. 이는 본 실험에서 사용한 관절 좌표 통계 특징과 데이터 규모에서는 SVM과 XGBoost가 비교적 안정적으로 동작했음을 의미한다."))
+    blocks.append(paragraph("표 5의 최종 5-seed 반복 실험 결과에서 SVM은 Macro-F1 0.9044로 가장 높은 평균 성능을 보였고, XGBoost는 Macro-F1 0.9006으로 SVM과 매우 근접한 성능을 보였다. Transformer와 GNN은 각각 0.8770, 0.8462의 Macro-F1을 기록하여 전통적 머신러닝 모델보다 낮은 성능을 보였다. 이는 본 실험에서 프레임별 관절 좌표를 통계 특징으로 요약한 입력 방식이 1차원 정형 특징 벡터에 강한 SVM과 XGBoost에 상대적으로 유리하게 작용했기 때문으로 해석할 수 있다. 반면 GNN과 Transformer는 관절 간 구조적 관계를 반영할 수 있다는 장점이 있으나, 본 실험의 요약 특징 구성과 데이터 조건에서는 그 장점이 성능 향상으로 충분히 이어지지 않았다."))
     blocks.append(paragraph())
     blocks.append(paragraph(TABLES[5][0], bold=True))
     blocks.append(table_xml(read_csv_table(table_dir / TABLES[5][1])))
